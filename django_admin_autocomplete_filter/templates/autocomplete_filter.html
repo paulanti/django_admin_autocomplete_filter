@@ -1,0 +1,43 @@
+{% load i18n %}
+<h3>{% blocktrans with filter_title=title %} By {{ filter_title }}{% endblocktrans %}</h3>
+<ul>
+  {{ spec.field.widget.media }}
+  {{ spec.rendered_widget }}
+</ul>
+
+<script>
+  const updateQueryStringParam = (param, value) => {
+    const urlQueryString = document.location.search;
+    const newParam = `${param}=${value}`;
+    let params = `?${newParam}`;
+
+    // If the "search" string exists, then build params from it
+    if (urlQueryString) {
+      const keyRegex = new RegExp(`([\?&])${param}[^&]*`);
+      // If param exists already, update it
+      if (urlQueryString.match(keyRegex) !== null && value !== '') {
+        params = urlQueryString.replace(keyRegex, `$1${newParam}`);
+      } else if (value === '') {
+        params = urlQueryString.replace(keyRegex, '');
+      } else { // Otherwise, add it to end of query string
+        params = `${urlQueryString}&${newParam}`;
+      }
+    }
+    window.location.search = params;
+  };
+
+  (function($) {
+    $(document).ready(() => {
+      $('#changelist-filter select[name={{ spec.parameter_name }}]').on(
+        'change',
+        function (e, choice) {
+          const val = $(e.target).val() || '';
+          updateQueryStringParam(`{{ spec.parameter_name }}`, val);
+          {#window.location.reload();#}
+        });
+      $(window).bind('load', function() {
+        $('.select2-container--admin-autocomplete').css('width', '210px');
+      });
+    });
+  })(django.jQuery);
+</script>
